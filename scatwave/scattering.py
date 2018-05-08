@@ -79,7 +79,7 @@ class Scattering(object):
         else:
             out_ = self.padding_module.updateOutput(input)
             output = input.new(out_.size(0), out_.size(1), out_.size(2), out_.size(3), 2).fill_(0)
-            output.narrow(4, 0, 1).copy_(out_)
+            output.narrow(4, 0, 1).copy_(out_.unsqueeze(4))
         return output
 
     def _unpad(self, in_):
