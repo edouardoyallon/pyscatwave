@@ -1,3 +1,13 @@
+Announcement
+==========
+
+We just released a differentiable 2D Scattering in the master. It is not memory efficient yet, neither fast.
+
+
+Soon, we will release  a new version of PyScatwave. It will include: 1D-2D-3D fast, optimized, differentiable Scattering Transform. 
+It will be a CPU and GPU friendly, compatible with the latest pytorch and python 3. Illustrative code samples(GANs, reconstruction, classification,...) will be included.
+
+
 PyScatWave
 ==========
 
