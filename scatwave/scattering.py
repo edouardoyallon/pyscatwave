@@ -9,8 +9,7 @@ import warnings
 import torch
 from .utils import cdgmm, Modulus, Periodize, Fft
 from .filters_bank import filters_bank
-from torch.legacy.nn import SpatialReflectionPadding as pad_function
-
+from torch.nn import ReflectionPad2d as pad_function
 
 class Scattering(object):
     """Scattering module.
@@ -44,7 +43,7 @@ class Scattering(object):
 
     def _type(self, _type):
         for key, item in enumerate(self.Psi):
-            for key2, item2 in self.Psi[key].iteritems():
+            for key2, item2 in self.Psi[key].items():
                 if torch.is_tensor(item2):
                     self.Psi[key][key2] = item2.type(_type)
         self.Phi = [v.type(_type) for v in self.Phi]
@@ -77,7 +76,7 @@ class Scattering(object):
             output = input.new(input.size(0), input.size(1), input.size(2), input.size(3), 2).fill_(0)
             output.narrow(output.ndimension()-1, 0, 1).copy_(input)
         else:
-            out_ = self.padding_module.updateOutput(input)
+            out_ = self.padding_module(input)
             output = input.new(out_.size(0), out_.size(1), out_.size(2), out_.size(3), 2).fill_(0)
             output.narrow(4, 0, 1).copy_(out_.unsqueeze(4))
         return output

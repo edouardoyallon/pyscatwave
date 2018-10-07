@@ -92,7 +92,7 @@ class Periodize(object):
             kernel = Template(kernel).substitute(B=B, H=H, W=W, k=k, Dtype=getDtype(input))
             name = str(input.get_device())+'-'+str(B)+'-'+str(k)+'-'+str(H)+'-'+str(W)+'-periodize.cu'
             print(name)
-            prog = Program(kernel, name.encode())
+            prog = Program(kernel, name)
             ptx = prog.compile(['-arch='+get_compute_arch(input)])
             module = Module()
             module.load(bytes(ptx.encode()))
@@ -120,7 +120,7 @@ class Modulus(object):
     def __call__(self, input):
         if not self.jit or not isinstance(input, torch.cuda.FloatTensor):
             norm = input.norm(2, input.dim() - 1)
-            return torch.cat([norm, norm.new(norm.size()).zero_()], input.dim() - 1)
+            return torch.stack([norm, norm.new(norm.size()).zero_()], -1)
 
         out = input.new(input.size())
         input = input.contiguous()
@@ -129,7 +129,7 @@ class Modulus(object):
             raise TypeError('The input and outputs should be complex')
 
         if (self.modulus_cache[input.get_device()] is None):
-            kernel = b"""
+            kernel = """
             extern "C"
             __global__ void abs_complex_value(const float * x, float2 * z, int n)
             {
@@ -141,7 +141,7 @@ class Modulus(object):
             }
             """
             print('modulus.cu')
-            prog = Program(kernel, b'modulus.cu')
+            prog = Program(kernel, 'modulus.cu')
             ptx = prog.compile(['-arch='+get_compute_arch(input)])
             module = Module()
             module.load(bytes(ptx.encode()))
@@ -257,11 +257,11 @@ def cdgmm(A, B, jit=True, inplace=False):
     if not jit or isinstance(A, (torch.FloatTensor, torch.DoubleTensor)):
         C = A.new(A.size())
 
-        A_r = A[..., 0].contiguous().view(-1, A.size(-2)*A.size(-3))
-        A_i = A[..., 1].contiguous().view(-1, A.size(-2)*A.size(-3))
+        A_r = A[..., 0]
+        A_i = A[..., 1]
 
-        B_r = B[...,0].contiguous().view(B.size(-2)*B.size(-3)).unsqueeze(0).expand_as(A_i)
-        B_i = B[..., 1].contiguous().view(B.size(-2)*B.size(-3)).unsqueeze(0).expand_as(A_r)
+        B_r = B[..., 0].unsqueeze(0)
+        B_i = B[..., 1].unsqueeze(0)
 
         C[..., 0].copy_(A_r * B_r - A_i * B_i)
         C[..., 1].copy_(A_r * B_i + A_i * B_r)

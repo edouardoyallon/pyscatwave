@@ -2,11 +2,9 @@
 
 import torch
 import unittest
+import torch_testing as tt
 from scatwave.scattering import Scattering
 from scatwave import utils as sl
-
-def linfnorm(x,y):
-    return torch.max(torch.abs(x-y))
 
 class TestScattering(unittest.TestCase):
     def testFFTCentralFreq(self):
@@ -21,7 +19,7 @@ class TestScattering(unittest.TestCase):
             fft = sl.Fft()
             fft(x, inplace=True)
             b = x[0,0,0]
-            self.assertAlmostEqual(a, b, places=6)
+            tt.assert_almost_equal(a.cpu(), b.cpu(), decimal=6)
 
     def testFFTCentralFreqBatch(self):
         # Same for batches
@@ -35,7 +33,7 @@ class TestScattering(unittest.TestCase):
             fft = sl.Fft()
             fft(x, inplace=True)
             c = x[:,0,0,0].sum()
-            self.assertEqual(a, c)
+            tt.assert_equal(a.cpu(), c.cpu())
 
     def testFFTUnormalized(self):
         # Check for a random tensor:
@@ -55,7 +53,7 @@ class TestScattering(unittest.TestCase):
             z /= 17*3 # FFTs are unnormalized
 
 
-            self.assertAlmostEqual(linfnorm(x.select(3,0), z),0,places=6)
+            tt.assert_allclose(x.select(3,0).cpu(), z.cpu(), atol=1e-6)
 
 
 
@@ -67,9 +65,9 @@ class TestScattering(unittest.TestCase):
             x = torch.cuda.FloatTensor(100,10,4,2).copy_(torch.rand(100,10,4,2))
             y = modulus(x)
             u = torch.squeeze(torch.sqrt(torch.sum(x * x, 3)))
-            v = y.narrow(3, 0, 1)
+            v = y[..., 0]
 
-            self.assertLess((u - v).abs().max(), 1e-6)
+            tt.assert_allclose(u.cpu(), v.cpu(), atol=1e-6)
 
 
     def testPeriodization(self):
@@ -88,10 +86,10 @@ class TestScattering(unittest.TestCase):
             periodize = sl.Periodize(jit=jit)
 
             z = periodize(x, k=16)
-            self.assertLess((y - z).abs().max(), 1e-8)
+            tt.assert_allclose(y.cpu(), z.cpu(), atol=1e-8)
 
             z = periodize(x.cpu(), k=16)
-            self.assertLess((y.cpu() - z).abs().max(), 1e-8)
+            tt.assert_allclose(y.cpu(), z, atol=1e-8)
 
 
     # Check the CUBLAS routines
@@ -108,7 +106,7 @@ class TestScattering(unittest.TestCase):
                 y[i, :, :, 1] = x[i, :, :, 1] * filter[:, :, 0] + x[i, :, :, 0] *filter[:, :, 1]
             z = sl.cdgmm(x, filter, jit=jit)
 
-            self.assertLess((y-z).abs().max(), 1e-6)
+            tt.assert_allclose(y.cpu(), z.cpu(), atol=1e-6)
 
     def testScattering(self):
         data = torch.load('test/test_data.pt')
@@ -118,7 +116,7 @@ class TestScattering(unittest.TestCase):
         scat.cuda()
         x = x.cuda()
         S = S.cuda()
-        self.assertLess(((S - scat(x))).abs().max(), 1e-6)
+        tt.assert_allclose(S.cpu(), scat(x).cpu(), atol=1e-6)
 
         scat = Scattering(128, 128, 4, pre_pad=False, jit=False)
         Sg = []
@@ -134,7 +132,7 @@ class TestScattering(unittest.TestCase):
                 Sc = scat(x)
         """there are huge round off errors with fftw, numpy fft, cufft...
         and the kernels of periodization. We do not wish to play with that as it is meaningless."""
-        self.assertLess((Sg.cpu()-Sc).abs().max(), 1e-1)
+        tt.assert_allclose(Sg.cpu(), Sc.cpu(), atol=1e-1)
 
 
 

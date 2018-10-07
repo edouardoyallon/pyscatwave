@@ -66,7 +66,7 @@ def main():
     stats = {'bn.running_mean': torch.zeros(K).cuda(),
              'bn.running_var': torch.ones(K).cuda()}
 
-    for k, v in params.items():
+    for k, v in list(params.items()):
         params[k] = Variable(v.cuda(), requires_grad=True)
 
     def h(sample):
@@ -82,20 +82,20 @@ def main():
     def on_forward(state):
         classerr.add(state['output'].data,
                      torch.LongTensor(state['sample'][1]))
-        meter_loss.add(state['loss'].data[0])
+        meter_loss.add(state['loss'].item())
 
     def on_start_epoch(state):
         classerr.reset()
         state['iterator'] = tqdm(state['iterator'])
 
     def on_end_epoch(state):
-        print 'Training accuracy:', classerr.value()
+        print('Training accuracy:', classerr.value())
 
     def on_end(state):
-        print 'Training' if state['train'] else 'Testing', 'accuracy'
-        print classerr.value()
+        print('Training' if state['train'] else 'Testing', 'accuracy')
+        print(classerr.value())
 
-    optimizer = torch.optim.SGD(params.values(), lr=0.01, momentum=0.9,
+    optimizer = torch.optim.SGD(list(params.values()), lr=0.01, momentum=0.9,
                                 weight_decay=0.0005)
 
     engine = Engine()
@@ -104,9 +104,9 @@ def main():
     engine.hooks['on_start_epoch'] = on_start_epoch
     engine.hooks['on_end_epoch'] = on_end_epoch
     engine.hooks['on_end'] = on_end
-    print 'Training:'
+    print('Training:')
     engine.train(h, get_iterator(True), 10, optimizer)
-    print 'Testing:'
+    print('Testing:')
     engine.test(h, get_iterator(False))
 
 
