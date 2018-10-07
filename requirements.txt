@@ -1,8 +1,9 @@
 cupy
-torch >= 0.1.11
+torch >= 0.4
 numpy
 scikit-cuda
 scipy
-pynvrtc
+pynvrtc >= 9.0
 tqdm
 git+git://github.com/pytorch/tnt.git#egg=tnt
+torch_testing
