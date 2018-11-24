@@ -1,11 +1,11 @@
-Announcement
+Announcement 
 ==========
 
-We just released a differentiable 2D Scattering in the master. It is not memory efficient yet, neither fast.
+11/18
+This package is no longer supported. We have now released kymatio: http://www.kymat.io/ , https://github.com/kymatio/kymatio which includes 1D-2D-3D fast, optimized, differentiable Scattering Transform and subsumes all the behavior of pyscatwave. Among other things you can now more easily use differentiable 2d scattering and use the CPU if desired. kymatio will be well supported with a substantially larger development team than pyscatwave.
 
-
-Soon, we will release  a new version of PyScatwave. It will include: 1D-2D-3D fast, optimized, differentiable Scattering Transform. 
-It will be a CPU and GPU friendly, compatible with the latest pytorch and python 3. Illustrative code samples(GANs, reconstruction, classification,...) will be included.
+07/18
+We just released a differentiable 2D Scattering example in the master. It is not memory efficient yet, neither fast.
 
 
 PyScatWave
