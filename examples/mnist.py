@@ -94,6 +94,7 @@ def main():
     def on_end(state):
         print('Training' if state['train'] else 'Testing', 'accuracy')
         print(classerr.value())
+        classerr.reset()
 
     optimizer = torch.optim.SGD(list(params.values()), lr=0.01, momentum=0.9,
                                 weight_decay=0.0005)
